@@ -54,6 +54,24 @@ jobs:
           $tailscaleExe = "C:\Program Files\Tailscale\tailscale.exe"
           & $tailscaleExe up --authkey $env:TAILSCALE_AUTH_KEY --hostname $env:PC_NAME --accept-routes
 
+      - name: 🔊 Enable Audio Service on Login
+        shell: powershell
+        run: |
+          $serviceName = "Audiosrv"  # Windows Audio service
+          # Set service to start automatically
+          Set-Service -Name $serviceName -StartupType Automatic
+          # Start service immediately
+          Start-Service -Name $serviceName
+
+          # Also make sure dependencies are started
+          $dependencies = (Get-Service -Name $serviceName).DependentServices
+          foreach ($dep in $dependencies) {
+              Set-Service -Name $dep.Name -StartupType Automatic
+              Start-Service -Name $dep.Name
+          }
+
+          Write-Output "Audio service enabled and will start on login for CloudPCUSER."
+
       - name: 🚀 Finalizing Cloud PC
         shell: powershell
         run: |
@@ -75,4 +93,3 @@ jobs:
               Start-Sleep -Seconds 60
           }
           Write-Output "5 hours reached. Cloud PC job completed."
-
